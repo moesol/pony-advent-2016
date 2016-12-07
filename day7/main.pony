@@ -95,23 +95,13 @@ actor Main
     else
       abba_outside > 0
     end
-    let both = abaSet.op_and(babSet)
+    let both = abaSet and babSet
     let ssl: Bool = if both.size() > 0 then
       true
     else
       false
     end
     (tls, ssl)
-
-  fun set_intersect(abaSet: Set[String], babSet: Set[String]): Set[String] =>
-    for value in abaSet.values() do
-      try
-        babSet(value)
-      else
-        abaSet.unset(value)
-      end
-    end
-    abaSet
 
   fun print_set(msg: String, set: Set[String]) =>
     env.out.print("{" + msg)
