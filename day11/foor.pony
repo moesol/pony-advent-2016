@@ -83,6 +83,6 @@ class Floor
     let gm: String val = gen_mic.clone()
     recover val
       let r: String ref = String
-      r.append((1+floor).string()).append(" ").append(gm)
+      r.append("|").append((1+floor).string()).append("|").append(gm)
       r.clone()
     end

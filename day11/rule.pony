@@ -15,20 +15,23 @@ primitive Rule
       end
     end
 
-    if s.moves >= 50 then
-      Debug.out("limit reached")
+    if s.moves >= 1000 then
+      // Debug.out("limit reached")
       return false
     end
 
+    // Don't let the M's get ahead of the G'
     // for t in INPUT.types().values() do
     //   let fOfG: U32 = s.floorOfG(t).u32()
     //   let fOfM: U32 = s.floorOfM(t).u32()
-    //   let max = fOfG.max(fOfM)
-    //   let min = fOfG.min(fOfM)
-    //   if (max - min) > 1 then
-    //     // Debug.out("GRRR" + (max - min).string())
+    //   if fOfM > fOfG then
+    //     // Debug.out("bad-m-g@" + s.moves.string() + ":" + s.string())
     //     return false
     //   end
+    // end
+    // // Don't let elevator go to floor "1"
+    // if s.elevator.floor == 0 then
+    //   return false
     // end
 
     // TODO might need to do elevator

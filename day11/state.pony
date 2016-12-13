@@ -2,24 +2,23 @@ use "collections"
 use "debug"
 
 class State
-  let seen: Set[String]
+  let seen: Map[String, State]
   var moves: USize
   let elevator: Elevator
   let floors: Array[Floor box]
 
   new create(
-    seen': Set[String],
+    seen': Map[String, State],
     moves': USize,
     e: Elevator, f: Array[Floor box]
   ) =>
-    // seen = seen' - bug, can't share seen
-    seen = Set[String]
+    seen = seen' // Must be breadth first search
+    // seen = Set[String]
     moves = moves'
     elevator = e
     floors = f
 
   fun ref compute_next(): Array[State] =>
-    seen.set(string())
     match elevator.floor
     | 3 => down()
     | 2 => down().concat(up().values())
@@ -128,13 +127,25 @@ class State
 
   fun ref maybe_add_state(list: Array[State], state: State) =>
     if not seen.contains(state.string()) then
-      seen.set(state.string())
+      seen(state.string()) = state
       // if elevator.floor == 1 then
       //   Debug.out("from: " + string())
       //   Debug.out("try: " + state.string())
       // end
       if Rule.is_safe_state(state) then
         list.push(state)
+      end
+    else
+      try
+        let old = seen(state.string())
+        if old.moves > state.moves then
+          // Found a faster way to get here
+          Debug.out("Found faster path to " + state.string())
+          seen(state.string()) = state
+          if Rule.is_safe_state(state) then
+            list.push(state)
+          end
+        end
       end
     end
 
