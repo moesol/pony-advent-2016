@@ -34,13 +34,14 @@ actor Main
     disks.push(Disk(1, 7))
     disks.push(Disk(3, 5))
     disks.push(Disk(5, 17))
+    disks.push(Disk(0, 11))
 
     try
       for i in Range(0, disks.size()) do
         env.out.print(disks(i).string(i + 1))
       end
 
-      for time in Range(0, 1_000_000) do
+      for time in Range(0, 10_000_000) do
         var bounce = false
         for d in Range(0, disks.size()) do
           let dt = time + d + 1
