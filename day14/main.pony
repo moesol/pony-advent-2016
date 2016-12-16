@@ -2,6 +2,7 @@ use "ponytest"
 use "debug"
 use "collections"
 use "crypto"
+use "time"
 
 actor Main is TestList
   new create(env: Env) => PonyTest(env, this)
@@ -10,9 +11,46 @@ actor Main is TestList
 fun tag tests(test: PonyTest) =>
   test(_TestCollector1)
   test(_TestGenerator)
+  test(_TestStretch)
   // test(_TestSample)
-  test(_TestSampleActors)
-  test(_TestPuzzleActors)
+  // test(_TestSampleActors)
+  // test(_TestPuzzleActors)
+  test(_TestPuzzle2Actors)
+  // test(_TestPuzzle2)
+
+class iso _TestStretch is UnitTest
+  fun name(): String => "stretch"
+  fun apply(h: TestHelper) =>
+    h.assert_eq[String]("577571be4de9dcce85a041ba0410f29f", Generator("abc").apply(0))
+    h.assert_eq[String]("a107ff634856bb300138cac6568c0f24", Generator("abc").stretch(0))
+
+class iso _TestPuzzle2 is UnitTest
+  fun name(): String => "puzzle2/iter"
+  fun apply(h: TestHelper) =>
+    let seed = "zpqevtbw"
+    let col = CollectorActor(h.env)
+    let gen = Generator(seed)
+    for i in Range(0, 10_000_000) do
+      col.collect(i, gen.stretch(i))
+    end
+
+class iso _TestPuzzle2Actors is UnitTest
+  fun name(): String => "puzzle2/actors"
+
+  fun apply(h: TestHelper) =>
+    let seed = "zpqevtbw"
+    let col = CollectorActor(h.env)
+    let gens = Array[GeneratorActor]
+    for i in Range(0, 1) do
+      gens.push(GeneratorActor(seed))
+    end
+    for i in Range(0, 10_000_000) do
+      try
+        // Debug.out("i " + i.string())
+        let t = i % gens.size()
+        gens(t).stretch(i, col)
+      end
+    end
 
 class iso _TestPuzzleActors is UnitTest
   fun name(): String => "sample/actors"
@@ -109,6 +147,8 @@ actor GeneratorActor
     gen = Generator(seed')
   be generate(index: USize, col: CollectorActor) =>
     col.collect(index, gen(index))
+  be stretch(index: USize, col: CollectorActor) =>
+    col.collect(index, gen.stretch(index))
 
 actor CollectorActor
   let col: Collector
@@ -126,6 +166,9 @@ class Generator
 
   fun apply(index: USize): String =>
     let attempt = seed + index.string()
+    _compute(attempt)
+
+  fun _compute(attempt: String): String =>
     let md5 = Digest.md5()
     try
       md5.append(attempt)
@@ -136,20 +179,41 @@ class Generator
       "ERROR"
     end
 
+  fun stretch(index: USize): String =>
+    let attempt = seed + index.string()
+    _stretch(_compute(attempt))
+
+  fun _stretch(old: String): String =>
+    var cur = old
+    for i in Range(0, 2016) do
+      cur = _compute(cur)
+    end
+    cur
+
 class Collector
   let env: Env
   let results: Array[(None|String)] = Array[(None|String)].init(None, 10_000_000)
   var want: USize = 0
   var keys_found: USize = 0
   var max_key: USize = 0
+  var lastReport: I64 = 0
 
   new create(env': Env) =>
     env = env'
 
   fun ref _collect(index: USize, hash: String) =>
     try
+
+      let nowSecs = Time.seconds()
+      if (lastReport + 10) <= nowSecs then
+        lastReport = nowSecs
+        env.out.print("want: " + want.string())
+        env.out.print("size: " + index.string())
+      end
+
       results(index) = hash
       while search_for_key() do
+        results(want) = None
         want = want + 1
         if keys_found == 64 then
           env.out.print("--64--" + max_key.string())
@@ -191,6 +255,7 @@ class Collector
           if is_key(char, h) then
             keys_found = keys_found + 1
             max_key = max_key.max(want)
+            env.out.print("5 was " + h + "#" + keys_found.string())
             // Debug.out("5 was " + h + "@" + i.string())
             return true
           end
