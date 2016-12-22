@@ -2,13 +2,14 @@ use "collections"
 use "debug"
 
 class State
-  let seen: Map[String, State]
+  // let seen: Map[String, State]
+  let seen: Set[String]
   var moves: USize
   let elevator: Elevator
   let floors: Array[Floor box]
 
   new create(
-    seen': Map[String, State],
+    seen': Set[String],
     moves': USize,
     e: Elevator, f: Array[Floor box]
   ) =>
@@ -127,7 +128,7 @@ class State
 
   fun ref maybe_add_state(list: Array[State], state: State) =>
     if not seen.contains(state.string()) then
-      seen(state.string()) = state
+      seen.set(state.string())
       // if elevator.floor == 1 then
       //   Debug.out("from: " + string())
       //   Debug.out("try: " + state.string())
@@ -135,19 +136,20 @@ class State
       if Rule.is_safe_state(state) then
         list.push(state)
       end
-    else
-      try
-        let old = seen(state.string())
-        if old.moves > state.moves then
-          // Found a faster way to get here
-          Debug.out("Found faster path to " + state.string())
-          seen(state.string()) = state
-          if Rule.is_safe_state(state) then
-            list.push(state)
-          end
-        end
-      end
     end
+    // else
+    //   try
+    //     let old = seen(state.string())
+    //     if old.moves > state.moves then
+    //       // Found a faster way to get here
+    //       Debug.out("Found faster path to " + state.string())
+    //       seen(state.string()) = state
+    //       if Rule.is_safe_state(state) then
+    //         list.push(state)
+    //       end
+    //     end
+    //   end
+    // end
 
   fun is_win(): Bool =>
     try

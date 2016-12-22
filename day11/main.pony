@@ -27,8 +27,14 @@ actor Main
   new create(env': Env) =>
     env = env'
 
-    let seenStates = Map[String, State]
-    let state = State(seenStates, 0, Elevator(0), puzzle())
+    let seenStates = Set[String]
+    // let state = State(seenStates, 0, Elevator(0), puzzle())
+    let state = State(seenStates, 0, Elevator(0), puzzle_part2())
+    // let state = State(seenStates, 0, Elevator(3), puzzle_part2a())
+
+    // 48 is too low
+    // based on partial 57 (each extra pair on floor 1 is +12?)
+    // 59 is too high
 
     pending.push(state)
     search_pending()
@@ -107,4 +113,59 @@ actor Main
       recover box Floor(2).m("cobalt").m("curium").m("ruthenium").m("plutonium").build() end,
 // Empty
       recover box Floor(3).build() end
+    ]
+
+  fun puzzle_part2(): Array[Floor box] =>
+    [
+// The first floor contains a promethium generator and a promethium-compatible microchip.
+      recover box Floor(0)
+        .g("promethium").m("promethium")
+        .g("elerium").m("elerium")
+        .g("dilithium").m("dilithium")
+        .build()
+      end,
+// The second floor contains a cobalt generator,
+// a curium generator,
+// a ruthenium generator, and
+// a plutonium generator.
+      recover box Floor(1).g("cobalt").g("curium").g("ruthenium").g("plutonium").build() end,
+// The third floor contains a cobalt-compatible microchip,
+// a curium-compatible microchip,
+// a ruthenium-compatible microchip, and
+// a plutonium-compatible microchip.
+      recover box Floor(2).m("cobalt").m("curium").m("ruthenium").m("plutonium").build() end,
+// Empty
+      recover box Floor(3).build() end
+    ]
+
+/*
+Sub-problem
+E4 GM GM
+........
+........
+........GM GM
+*/
+  fun puzzle_part2a(): Array[Floor box] =>
+    [
+// The first floor contains a promethium generator and a promethium-compatible microchip.
+      recover box Floor(0)
+        .g("elerium").m("elerium")
+        .g("dilithium").m("dilithium")
+        .build()
+      end,
+// The second floor contains a cobalt generator,
+// a curium generator,
+// a ruthenium generator, and
+// a plutonium generator.
+      recover box Floor(1).build() end,
+// The third floor contains a cobalt-compatible microchip,
+// a curium-compatible microchip,
+// a ruthenium-compatible microchip, and
+// a plutonium-compatible microchip.
+      recover box Floor(2).build() end,
+// Empty
+      recover box Floor(3)
+        .g("ruthenium").g("plutonium")
+        .m("ruthenium").m("plutonium")
+        .build() end
     ]

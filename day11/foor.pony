@@ -15,11 +15,11 @@ class Floor
     floor = floor'
     _generators = generators'
     _microchips = microchips'
-    gen_mic = "..........".clone()
+    gen_mic = "..............".clone()
     build()
 
   fun ref build(): Floor =>
-    gen_mic.clear().append("..........")
+    gen_mic.clear().append("..............")
     try
       for g' in _generators.values() do
         let idx: USize = match g'
@@ -27,8 +27,10 @@ class Floor
         | "cobalt" => 1
         | "curium" => 2
         | "ruthenium" => 3
+        | "plutonium" => 4
+        | "elerium" => 5
         else
-          4
+          6
         end
         gen_mic(2 * idx) = 'G'
       end
@@ -38,8 +40,10 @@ class Floor
         | "cobalt" => 1
         | "curium" => 2
         | "ruthenium" => 3
+        | "plutonium" => 4
+        | "elerium" => 5
         else
-          4
+          6
         end
         gen_mic((2 * idx) + 1) = 'M'
       end

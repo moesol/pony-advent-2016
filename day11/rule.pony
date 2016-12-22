@@ -15,7 +15,7 @@ primitive Rule
       end
     end
 
-    if s.moves >= 1000 then
+    if s.moves >= 59 then
       // Debug.out("limit reached")
       return false
     end
@@ -39,11 +39,12 @@ primitive Rule
     true
 
   fun _is_safe(generators: Set[String] box, microchips: Set[String] box): Bool =>
-    let unpaired_microchips = microchips.without(generators)
-
     if generators.size() == 0 then
       return true
     end
+
+    let unpaired_microchips = microchips.without(generators)
+
     if unpaired_microchips.size() == 0 then
       return true
     end
