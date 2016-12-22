@@ -11,6 +11,8 @@ fun tag tests(test: PonyTest) =>
   test(_TestParse)
   test(_TestApply)
   test(_TestPuzzle)
+  test(_TestUndo)
+  test(_TestPuzzle2)
 
 class SwapPosition
   let x: USize
@@ -28,6 +30,8 @@ class SwapPosition
       Debug.err("** SP")
       s
     end
+  fun undo(s: String): String =>
+    apply(s)
   fun string(): String => "swap position"
 
 class SwapLetter
@@ -50,6 +54,8 @@ class SwapLetter
       Debug.err("** SL")
       s
     end
+  fun undo(s: String): String =>
+    apply(s)
   fun string(): String => "swap letter"
 
 class RotateLeft
@@ -67,6 +73,8 @@ class RotateLeft
       Debug.err("** RL")
       s
     end
+  fun undo(s: String): String =>
+    RotateRight(steps).apply(s)
   fun string(): String => "rotate left"
 
 class RotateRight
@@ -84,6 +92,8 @@ class RotateRight
       Debug.err("** RR")
       s
     end
+  fun undo(s: String): String =>
+    RotateLeft(steps).apply(s)
   fun string(): String => "rotate right"
 
 class RotateBasedOnLetter
@@ -113,6 +123,37 @@ class RotateBasedOnLetter
       Debug.err("** RB")
       s
     end
+  fun undo(s: String): String =>
+    try
+      var off: USize = 0
+      var found = false
+      for i in Range(0, s.size()) do
+        if letter == s(i) then
+          off = i
+          found = true
+          break
+        end
+      end
+      if not found then
+        Debug.err("Not found: " + letter.string())
+      end
+      off = match off
+      | 1 => 1
+      | 3 => 2
+      | 5 => 3
+      | 7 => 4
+      | 2 => 6
+      | 4 => 7
+      | 6 => 8
+      | 0 => 9
+      else
+        error
+      end
+      RotateLeft(off).apply(s)
+    else
+      Debug.err("** RB")
+      s
+    end
   fun string(): String => "rotate letter"
 
 class ReversePositions
@@ -133,6 +174,8 @@ class ReversePositions
       Debug.err("** RP")
       s
     end
+  fun undo(s: String): String =>
+    apply(s)
   fun string(): String => "reverse position " + x.string() + " " + y.string()
 
 class MovePosition
@@ -146,6 +189,16 @@ class MovePosition
       let r = s.clone()
       r.delete(x.isize())
       r.insert_byte(y.isize(), s(x))
+      r
+    else
+      Debug.err("** MP")
+      s
+    end
+  fun undo(s: String): String =>
+    try
+      let r = s.clone()
+      r.delete(y.isize())
+      r.insert_byte(x.isize(), s(y))
       r
     else
       Debug.err("** MP")
@@ -165,6 +218,10 @@ class Scrambler
 
   fun ref apply(op: Operation): String =>
     pass = op.apply(pass)
+    pass
+
+  fun ref undo(op: Operation): String =>
+    pass = op.undo(pass)
     pass
 
   fun parse(lines: Array[String]): Array[Operation] ? =>
@@ -249,6 +306,62 @@ class iso _TestParse is UnitTest
       h.fail("** Parse error")
     end
 
+class iso _TestUndo is UnitTest
+  fun name(): String => "undo"
+  fun apply(h: TestHelper) =>
+    /*
+    NOTE: we don't have to do undo perfect
+    We just need to undo so that redo ends up with same
+    scrambled password (I think). It appears that rotate based
+    on letter is a one way scramble.
+    */
+    // 0 -> 1
+    h.assert_eq[String]("habcdefg", RotateBasedOnLetter('a').apply("abcdefgh"))
+// 1 -> left 1 or 6
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('a').undo("habcdefg"), "a")
+
+    // 1 -> 2
+    h.assert_eq[String]("ghabcdef", RotateBasedOnLetter('b').apply("abcdefgh"))
+// 3 -> left 2
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('b').undo("ghabcdef"), "b")
+
+    // 2 -> 3
+    h.assert_eq[String]("fghabcde", RotateBasedOnLetter('c').apply("abcdefgh"))
+// 5 -> left 3
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('c').undo("fghabcde"), "c")
+
+    // 3 -> 4
+    h.assert_eq[String]("efghabcd", RotateBasedOnLetter('d').apply("abcdefgh"))
+// 7 -> left 4
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('d').undo("efghabcd"), "d")
+
+    // 4 -> 6
+    h.assert_eq[String]("cdefghab", RotateBasedOnLetter('e').apply("abcdefgh"))
+// 2 -> left 6
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('e').undo("cdefghab"), "e")
+
+    // 5 -> 7
+    h.assert_eq[String]("bcdefgha", RotateBasedOnLetter('f').apply("abcdefgh"))
+// 4 -> left 7
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('f').undo("bcdefgha"), "f")
+    //                                                             01234567
+
+    // 6 -> 8
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('g').apply("abcdefgh"))
+// 6 -> left 8
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('g').undo("abcdefgh"), "g")
+
+    // 7 -> 9
+    h.assert_eq[String]("habcdefg", RotateBasedOnLetter('h').apply("abcdefgh"))
+// 0 -> left 9
+    h.assert_eq[String]("abcdefgh", RotateBasedOnLetter('h').undo("habcdefg"), "h")
+    //                                                             01234567
+
+    h.assert_eq[String]("abcefghd", MovePosition(3, 7).apply("abcdefgh"))
+    h.assert_eq[String]("abcdefgh", MovePosition(3, 7).undo("abcefghd"))
+    h.assert_eq[String]("abgcdefh", MovePosition(6, 2).apply("abcdefgh"))
+    h.assert_eq[String]("abcdefgh", MovePosition(6, 2).undo("abgcdefh"))
+
 class iso _TestApply is UnitTest
   fun name(): String => "apply"
   fun apply(h: TestHelper) =>
@@ -263,6 +376,9 @@ class iso _TestApply is UnitTest
       h.assert_eq[String]("abdec", s(ops(5)))
       h.assert_eq[String]("ecabd", s(ops(6)))
       h.assert_eq[String]("decab", s(ops(7)))
+
+      // h.assert_eq[String]("ecabd", s.undo(ops(7)))
+      // h.assert_eq[String]("abdec", s.undo(ops(6)))
 
       h.assert_eq[String]("bdehagcf", ReversePositions(3, 7).apply("bdefcgah"))
     else
@@ -280,6 +396,26 @@ class iso _TestPuzzle is UnitTest
         // h.assert_eq[String]("", s.pass, op.string())
       end
       h.assert_eq[String]("dgfaehcb", s.pass)
+      for op in ops.reverse().values() do
+        s.undo(op)
+        // h.assert_eq[String]("", s.pass, op.string())
+      end
+      h.assert_eq[String]("abcdefgh", s.pass)
+    else
+      h.fail("** Apply error")
+    end
+
+class iso _TestPuzzle2 is UnitTest
+  fun name(): String => "puzzle2"
+  fun apply(h: TestHelper) =>
+    let s: Scrambler ref = Scrambler("fbgdceah".clone())
+    try
+      let ops = s.parse(INPUT.puzzle().split("\n"))
+      for op in ops.reverse().values() do
+        s.undo(op)
+        // h.assert_eq[String]("", s.pass, op.string())
+      end
+      h.assert_eq[String]("fdhgacbe", s.pass)
     else
       h.fail("** Apply error")
     end
