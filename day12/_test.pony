@@ -11,7 +11,8 @@ actor Main is TestList
   fun tag tests(test: PonyTest) =>
     test(_TestParse)
     // test(_TestSample)
-    test(_TestPuzzle)
+    // test(_TestPuzzle)
+    test(_TestPuzzle2)
 
 class CpyInst
   let x: (String|I64)
@@ -187,6 +188,17 @@ class iso _TestPuzzle is UnitTest
   fun name(): String => "puzzle"
   fun apply(h: TestHelper) =>
     let bunny: Assembly ref = Assembly
+    let r: Array[Inst] = bunny.parse(INPUT.puzzle().split("\n"))
+    for i in r.values() do
+      Debug.out(i.string())
+    end
+    bunny.exec(r)
+
+class iso _TestPuzzle2 is UnitTest
+  fun name(): String => "puzzle2"
+  fun apply(h: TestHelper) =>
+    let bunny: Assembly ref = Assembly
+    bunny.registers("c") = 1
     let r: Array[Inst] = bunny.parse(INPUT.puzzle().split("\n"))
     for i in r.values() do
       Debug.out(i.string())
