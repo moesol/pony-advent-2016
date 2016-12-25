@@ -179,9 +179,10 @@ actor Collector
   fun ref find_shortest() =>
     Debug.out("ready --" + goals.size().string())
     try
-      for i in Range(0, goals.size()) do
-        _find_shortest(i, goals, 0)
-      end
+      _find_shortest(0, goals, 0)
+      // for i in Range(0, goals.size()) do
+      //   _find_shortest(i, goals, 0)
+      // end
       env.out.print("best: " + best.string() + " searched: " + searched.string())
     else
       Debug.err("** Grr")
@@ -195,6 +196,10 @@ actor Collector
     end
     if r'.size() == 0 then
       // Debug.out("done dist=" + traveled.string())
+      // now add the distance from here to 0
+      // let final = traveled + compute_dist(src, goals(0))
+      // Debug.out("zero: " + goals(0).string())
+      // best = best.min(final)
       best = best.min(traveled)
       return
     end
@@ -211,7 +216,7 @@ actor Collector
       // Debug.out(encode(from.location, to.location) + " is " + r.string())
       r
     else
-      Debug.err("** " + encode(from.location, to.location))
+      Debug.err("** missing: " + encode(from.location, to.location))
       error
     end
 

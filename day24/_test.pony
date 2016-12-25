@@ -12,7 +12,7 @@ actor Main is TestList
     test(_TestFindGoals)
     test(_TestFindDists)
 
-class val Goal is (Hashable & Equatable[Goal])
+class val Goal is (Hashable & Equatable[Goal] & Comparable[Goal])
   let name: U8
   let location: (USize, USize)
   new val create(name': U8, location': (USize, USize)) =>
@@ -26,6 +26,8 @@ class val Goal is (Hashable & Equatable[Goal])
     name == other.name
   fun hash(): U64 =>
     name.hash()
+  fun lt(other: Goal): Bool =>
+    name < other.name
 
 class FindGoals
   fun search(maze: String): Array[Goal] =>
@@ -84,7 +86,7 @@ class Solver
     try
       let collector = Collector(env)
       let find: FindGoals val = FindGoals
-      let goals = find.search(input)
+      let goals = Sort[Array[Goal], Goal](find.search(input))
       let maze = find.remove_goals(input)
       Debug.out(maze)
       var count: USize = 0
