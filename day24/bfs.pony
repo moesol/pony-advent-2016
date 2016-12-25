@@ -197,10 +197,12 @@ actor Collector
     if r'.size() == 0 then
       // Debug.out("done dist=" + traveled.string())
       // now add the distance from here to 0
-      // let final = traveled + compute_dist(src, goals(0))
-      // Debug.out("zero: " + goals(0).string())
-      // best = best.min(final)
-      best = best.min(traveled)
+      if true then
+        let final = traveled + compute_dist(src, goals(0))
+        best = best.min(final)
+      else
+        best = best.min(traveled)
+      end
       return
     end
 
