@@ -51,19 +51,21 @@ actor Router
     end
 
   be route(state: State) =>
-    if win then
-      return
-    end
+    // if win then
+    //   return
+    // end
     if visited.contains(state.path) then
       return
     end
     visited.set(state.path)
     if (state.location._1 == 3) and (state.location._2 == 3) then
-      env.out.print("win: path: " + state.path)
+      env.out.print(
+        "win: length: " + state.path.size().string() +
+        " path: " + state.path)
       win = true
       return
     end
-    Debug.out("state: " + state.string())
+    // Debug.out("state: " + state.string())
     try
       workers(next % workers.size()).next_states(state)
     end
